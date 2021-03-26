@@ -24,8 +24,9 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 // import * as MediaLibrary from 'expo-media-library';
 
-const SERVER_IP = "121.138.83.4";
-const POSE_NAME = ["address", "take away", "back swing", "top", "down swing", "impact", "release", "follow through"];
+import { SERVER_IP } from '../../ServerIp';
+// const SERVER_IP = "121.138.83.4";
+const POSE_NAME = ["address", "take away", "back swing", "top", "down swing", "impact", "release", "finish"];
 
 const RecordScreen = ({ navigation }) => {
 
@@ -129,7 +130,7 @@ const RecordScreen = ({ navigation }) => {
     };
 
     const sendVideo = async () => {
-        const userToken = await getJWT();
+        const userToken = getJWT();
         const formData = new FormData();
         formData.append('video',{
             name: "video_upload",
@@ -156,31 +157,31 @@ const RecordScreen = ({ navigation }) => {
     
         // const imagePath = result[imageNumber.splice(-1, 1)];
         // console.log(imagePath);
-        const imagePath = result['filePath'];
-        console.log('이미지 이름: ', imagePath);
+        const filePath = result['filePath'];
+        // console.log('이미지 이름: ', imagePath);
 
-        await FileSystem.makeDirectoryAsync(
-            FileSystem.documentDirectory + imagePath
-        );
+        // await FileSystem.makeDirectoryAsync(
+        //     FileSystem.documentDirectory + imagePath
+        // );
         
         // indexes = [0, 1, 2, 3, 4, 5, 6, 7]
         const indexes = [...Array(8).keys()]; 
-        let images = indexes.map(index => (
-            FileSystem.downloadAsync(
-                `http://${SERVER_IP}:80/images/${imagePath}/${index}`,
-                FileSystem.documentDirectory + imagePath + `/${index}.png`
-            )
-        ));
-        images = await Promise.all(images);
+        // let images = indexes.map(index => (
+        //     FileSystem.downloadAsync(
+        //         `http://${SERVER_IP}:80/images/${imagePath}/${index}`,
+        //         FileSystem.documentDirectory + imagePath + `/${index}.png`
+        //     )
+        // ));
+        // images = await Promise.all(images);
 
         const data = indexes
                         .map(key => ({
                             key: POSE_NAME[key],
                             feedback: result[key],
-                            image: images[key].uri,
+                            image: filePath,
                         }));
         
-        console.log(images);
+        // console.log(images);
         console.log('Feedback 페이지로 이동');
 
         navigation.navigate('Feedback', {

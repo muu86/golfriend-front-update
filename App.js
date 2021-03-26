@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Alert } from 'react-native';
 
 import { NavigationContainer } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
@@ -12,7 +12,9 @@ import SignInNavigator from './Screens/SignInNavigator';
 import SplashScreen from './Screens/SplashScreen';
 import { createStackNavigator } from '@react-navigation/stack';
 
-const SERVER_IP = "121.138.83.4";
+import Constants from 'expo-constants';
+
+import { SERVER_IP } from './ServerIp';
 
 // 토큰 관리할 리듀서
 const tokenReducer = (prevState, action) => {
@@ -54,7 +56,7 @@ export default function App() {
   })
   
   // 시작 시 토큰 확인
-  // const [userToken, setUserToken] = useState(null);
+  // const [tokenValid, setTokenValid] = useState(false);
   useEffect(() => {
     (async () => {
       let userToken;
@@ -71,6 +73,12 @@ export default function App() {
         await axios.get(`http://${SERVER_IP}:80/check-token`, {
           headers: {
             'Authorization': `Bearer ${userToken}`,
+          }
+        })
+        .then(res => {
+          if (res.data) {
+            dispatch({ type: 'RESTORE_TOKEN', token: userToken });
+            return;
           }
         })
         .catch(error => {
@@ -97,13 +105,19 @@ export default function App() {
           email: data.email,
           password: data.password,
         })
-        .catch(e => console.log(e));
+        .catch(e => {
+          console.log(e);
+        });
         
         console.log(result);
+
+        if (result.data === "none") {
+          Alert.alert("로그인 실패ㅠ");
+          return;
+        }
         await SecureStore.setItemAsync('userToken', result.data);
         dispatch({ type: 'SIGN_IN', token: result.data });
         console.log('토큰이 저장되었습니다.');
-
       },
       signOut: async () => {
         await SecureStore.deleteItemAsync('userToken');
@@ -123,10 +137,11 @@ export default function App() {
         await SecureStore.setItemAsync('userToken', result.data);
         dispatch({ type: 'SIGN_IN', token: result.data });
         console.log('토큰이 저장되었습니다.');
-      },
-      getJWT: async () => {
-        const result = await SecureStore.getItemAsync('userToken');
+
         return result;
+      },
+      getJWT: () => {
+        return state.userToken;
       },
       // checkIdentity: async () => {
       //   const email = 
@@ -139,10 +154,12 @@ export default function App() {
     return <SplashScreen />;
   }
 
+  // console.log(tokenValid);
+
   return (
     <AuthContext.Provider value={authContext}>
       <NavigationContainer>    
-        {state.userToken == null ? (
+        {!state.userToken ? (
           <SignInNavigator />
           ) : (
           <MainNavigator />

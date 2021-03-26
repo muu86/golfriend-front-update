@@ -5,8 +5,7 @@ import {
 } from 'react-native';
 
 import axios from 'axios';
-
-const SERVER_IP = "121.138.83.4";
+import { SERVER_IP } from '../../ServerIp';
 
 const Awards = ({ token, badges }) => {
     // const [data, setData] = useState(null); 
@@ -34,14 +33,14 @@ const Awards = ({ token, badges }) => {
             showsHorizontalScrollIndicator={false}
             style={{ flex: 1 }}
         >
-            {badges.map((item, index) => {
-                console.log(item)
+            {Object.keys(badges).map((item, index) => {
+                // console.log(item)
                 return (
                     <Image
                         style={{ width: 70, height: 70, resizeMode: 'contain', }}
                         key={index}
                         source={{
-                            uri: `http://${SERVER_IP}:80/get-badge-image/${item}`,
+                            uri: `http://${SERVER_IP}:80/get-badge-image/${badges[item]}`,
                             headers: {
                                 'Authorization': `Bearer ${token}`
                             },

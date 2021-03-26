@@ -12,7 +12,8 @@ import { Video, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import AuthContext from '../../Context/AuthContext';
 
-const SERVER_IP = "192.168.55.147";
+import { SERVER_IP} from '../../ServerIp';
+// const SERVER_IP = "192.168.55.147";
 const POSE_NAME = ["address", "take away", "back swing", "top", "down swing", "impact", "release", "follow through"];
 
 const VideoScreen = ({ navigation, route }) => {

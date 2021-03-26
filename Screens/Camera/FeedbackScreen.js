@@ -6,8 +6,16 @@ import {
     Image,
     Animated,
     Dimensions,
+    Button,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, AntDesign, Entypo } from '@expo/vector-icons';
+import AuthContext from '../../Context/AuthContext';
+import { SERVER_IP } from '../../ServerIp';
+import axios from 'axios';
 
 const { width, height } = Dimensions.get('window');
 
@@ -50,7 +58,7 @@ const Info = ({ data, inputRange, scrollX }) => {
                     }));
     
     return (
-        <View style={{ marginTop: 10, }}>
+        <ScrollView style={{ marginTop: 10, }}>
             {good && <Animated.FlatList
                 data={good}
                 keyExtractor={item => item.key.toString()}
@@ -105,7 +113,7 @@ const Info = ({ data, inputRange, scrollX }) => {
                     </Animated.Text>
                 )}
             />}
-        </View>
+        </ScrollView>
     )
 }
 
@@ -167,6 +175,8 @@ const Indicator = ({ data, scrollX }) => {
 const ImageList = ({ data, scrollX }) => {
 
     data = [{ key: 'empty-left' }, ...data, { key: 'empty-right' }];
+    const { getJWT } = React.useContext(AuthContext);
+    const token = getJWT();
 
     return (
         <View style={{ flex: 1 }}>
@@ -223,7 +233,12 @@ const ImageList = ({ data, scrollX }) => {
                             >
                                 <Image
                                     style={styles.poseImage}
-                                    source={{ uri: item.image }}
+                                    source={{ 
+                                        uri: `http://${SERVER_IP}:80/get-image/${item.image}_${index - 1}`,
+                                        headers: {
+                                            'Authorization': `Bearer ${token}` 
+                                        }
+                                    }}
                                 />
                             </Animated.View>
                             <Animated.Text
@@ -246,10 +261,91 @@ const ImageList = ({ data, scrollX }) => {
     )
 }
 
-const FeedbackScreen = ({ route }) => {
-    const data = route.params.data;
+const FeedbackScreen = ({ navigation, route }) => {
+    const { getJWT } = React.useContext(AuthContext);
+    const token = getJWT();
+
+    const { data } = route.params;
     // const data = TEST_DATA;
     const scrollX = React.useRef(new Animated.Value(0)).current;
+
+    // 스택 헤더 바에 버튼 추가
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                    <TouchableOpacity
+                        style={{ 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            marginHorizontal: 10
+                        }}
+                        onPress={() => console.log('hit')} 
+                    >
+                        <AntDesign style={{ marginHorizontal: 10 }} name="sharealt" size={20} />
+                        <Text style={{ fontSize: 10, }}>공유</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{ 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            marginHorizontal: 10
+                        }}
+                        onPress={() => {
+                            Alert.alert(
+                                '공유',
+                                "동영상을 소셜에 업로드하시겠습니까?",
+                                [
+                                    {
+                                        "text": "확인",
+                                        onPress: async () => {
+                                            await axios.post(`http://${SERVER_IP}:80/post-video-social/${data[0].image}`, {
+                                                    "memo": "first upload",
+                                                },
+                                                {
+                                                headers: {
+                                                    'Authorization': `Bearer ${token}`,
+                                                }
+                                            })
+                                            .catch(error => {
+                                                // console.log(error);
+                                                // if (error.response.status === 401) {
+                                                //     await signOut();
+                                                // }
+                                                if (error.response) {
+                                                    // 요청이 이루어졌으며 서버가 2xx의 범위를 벗어나는 상태 코드로 응답했습니다.
+                                                    console.log(error.response.data);
+                                                    console.log(error.response.status);
+                                                    console.log(error.response.headers);
+                                                }
+                                                else if (error.request) {
+                                                    // 요청이 이루어 졌으나 응답을 받지 못했습니다.
+                                                    // `error.request`는 브라우저의 XMLHttpRequest 인스턴스 또는
+                                                    // Node.js의 http.ClientRequest 인스턴스입니다.
+                                                    console.log(error.request);
+                                                }
+                                                else {
+                                                    // 오류를 발생시킨 요청을 설정하는 중에 문제가 발생했습니다.
+                                                    console.log('Error', error.message);
+                                                }
+                                                console.log(error.config);
+                                            })
+                                        }
+                                    }
+                                ],
+                                {
+                                    "cancelable": true,
+                                }
+                            )
+                        }}  
+                    >
+                        <Entypo name="slideshare" size={20} />
+                        <Text style={{ fontSize: 10, }}>소셜업로드</Text>
+                    </TouchableOpacity>
+                </View>
+            )
+        })
+    }, [navigation]);
 
     return (
         <View style={styles.container}>
@@ -275,7 +371,7 @@ const styles = StyleSheet.create({
     poseImage: {
         width: '100%',
         height: height * 0.5,
-        resizeMode: 'cover',
+        resizeMode: 'contain',
         // backgroundColor: 'blue',
         borderRadius: 30,
         marginHorizontal: 0,

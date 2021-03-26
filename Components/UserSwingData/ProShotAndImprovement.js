@@ -16,6 +16,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 import PerfectButton from './PerfectButton';
 
+import { SERVER_IP} from '../../ServerIp';
+
 const POSE_NAME = ["address", "take away", "back swing", "top", "down swing", "impact", "release", "follow through"];
 
 class Improvement extends Component {
@@ -124,7 +126,7 @@ class Improvement extends Component {
                                             },
                                         }}
                                         source={{
-                                            uri: `http://121.138.83.4:80/get-image/${String(imagePath)}_${String(index)}`,
+                                            uri: `http://${SERVER_IP}:80/get-image/${String(imagePath)}_${String(index)}`,
                                             headers: {
                                                 'Authorization': `Bearer ${token}`,
                                             },
